@@ -12,7 +12,7 @@ axios.post('http://localhost:3000/shorten', {
   long_url: longUrl
 })
 .then(response => {
-  const fullShortUrl = `http://localhost:3000/${response.data.shortUrl}`;
+  const fullShortUrl = `http://localhost:3000/${response.data.short_code}`;
   console.log(`Shortened URL: ${fullShortUrl}`);
 })
 .catch(error => {

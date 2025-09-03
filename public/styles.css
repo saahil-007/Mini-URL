@@ -291,15 +291,10 @@ body {
 }
 
 .action-buttons {
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
     display: flex;
     gap: 5px;
-    background-color: var(--surface);
+    justify-content: flex-end;
     padding: 5px;
-    border-radius: 5px;
 }
 
 .actions button {

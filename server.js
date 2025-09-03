@@ -11,10 +11,11 @@ const app = express();
 const port = 3000;
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
 });
 
 const createTableQuery = `
@@ -74,8 +75,7 @@ app.post('/shorten', async (req, res, next) => {
       'INSERT INTO urls (long_url, short_code) VALUES ($1, $2) RETURNING *',
       [long_url, shortCode]
     );
-    const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
-    res.json({ shortUrl: `${baseUrl}/${result.rows[0].short_code}` });
+    res.json({ short_code: result.rows[0].short_code });
   } catch (err) {
     next(err);
   }
