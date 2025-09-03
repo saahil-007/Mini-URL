@@ -177,8 +177,7 @@ app.get('/site-info', async (req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  const isProduction = process.env.NODE_ENV === 'production';
-  res.status(500).send(isProduction ? 'Server error' : err.stack);
+  res.status(500).send(err.stack);
 });
 
 app.listen(port, () => {
