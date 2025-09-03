@@ -157,44 +157,62 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const fetchRecentUrls = async () => {
-        const recentUrlsTableBody = document.querySelector('#url-table tbody');
-        recentUrlsTableBody.innerHTML = '';
-        try {
-            const response = await fetch(`${apiBaseUrl}/recent?all=true`); // Fetch all URLs
-            if (!response.ok) {
-                throw new Error('Could not fetch recent URLs.');
-            }
-            const data = await response.json();
-            const { rows: urls } = data;
+    const recentUrlsTableBody = document.querySelector('#url-table tbody');
+    recentUrlsTableBody.innerHTML = ''; // Clear existing rows
 
-            for (const url of urls) {
-                const row = document.createElement('tr');
-                const shortUrl = `${apiBaseUrl}/${url.short_code}`;
-                const longUrl = url.long_url;
+    try {
+        const response = await fetch(`${apiBaseUrl}/recent?all=true`);
+        if (!response.ok) {
+            throw new Error('Could not fetch recent URLs.');
+        }
+        const data = await response.json();
+        const { rows: urls } = data;
 
-                const siteInfo = await fetchSiteInfo(longUrl);
+        if (urls.length === 0) {
+            loadMoreBtn.style.display = 'none';
+            return;
+        }
 
-                row.innerHTML = `
+        const siteInfoPromises = urls.map(url => fetchSiteInfo(url.long_url));
+        const siteInfos = await Promise.all(siteInfoPromises);
+
+        let tableContent = '';
+        urls.forEach((url, index) => {
+            const shortUrl = `${apiBaseUrl}/${url.short_code}`;
+            const longUrl = url.long_url;
+            const siteInfo = siteInfos[index];
+
+            tableContent += `
+                <tr>
                     <td><a href="${shortUrl}" target="_blank">${shortUrl}</a></td>
                     <td class="site-info">${siteInfo.title || longUrl}</td>
                     <td class="actions">
                         <div class="action-buttons">
-                            <button class="view-long-url-btn" data-long-url="${longUrl}" title="View Long URL"><img src="https://img.icons8.com/ios-glyphs/30/info.png" alt="Info"/></button>
-                            <button class="copy-btn-row" data-short-url="${shortUrl}" title="Copy"><img src="https://img.icons8.com/material-outlined/24/000000/copy.png" alt="Copy"/></button>
-                            <button class="share-btn" data-short-url="${shortUrl}" title="Share"><img src="https://img.icons8.com/material-outlined/24/000000/share.png" alt="Share"/></button>
-                            <button class="delete-btn" data-id="${url.id}" title="Delete"><img src="https://img.icons8.com/material-outlined/24/000000/trash.png" alt="Delete"/></button>
+                            <button class="view-long-url-btn" data-long-url="${longUrl}" title="View Long URL">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            </button>
+                            <button class="copy-btn-row" data-short-url="${shortUrl}" title="Copy">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                            <button class="share-btn" data-short-url="${shortUrl}" title="Share">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            </button>
+                            <button class="delete-btn" data-id="${url.id}" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
                         </div>
                     </td>
-                `;
-                recentUrlsTableBody.appendChild(row);
-            }
+                </tr>
+            `;
+        });
 
-            loadMoreBtn.style.display = 'none'; // Hide load more button
+        recentUrlsTableBody.innerHTML = tableContent;
+        loadMoreBtn.style.display = 'none';
 
-        } catch (error) {
-            console.error('Error fetching recent URLs:', error);
-        }
-    };
+    } catch (error) {
+        console.error('Error fetching recent URLs:', error);
+    }
+};
 
     const showLongUrlDialog = (longUrl) => {
         const dialog = document.createElement('div');

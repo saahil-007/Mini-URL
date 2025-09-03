@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 /* Light theme variables */
 :root {
     --background: #ffffff;
@@ -14,12 +12,6 @@
     --border-radius: 8px;
     --transition-speed: 0.3s;
 }
-.site-info {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 200px; /* Adjust as needed */
-}
 
 /* Dark theme variables */
 [data-theme="dark"] {
@@ -29,8 +21,13 @@
     --secondary: #a0a0a0;
 }
 
-[data-theme="dark"] .actions button img {
-    filter: invert(1);
+.actions button svg {
+    color: var(--secondary);
+    transition: color var(--transition-speed);
+}
+
+.actions button:hover svg {
+    color: var(--primary);
 }
 
 .toggle-container {
@@ -101,7 +98,7 @@ body {
 .logo {
     width: 40px;
     height: 40px;
-    margin-right: 0px;
+    margin-right: 10px;
 }
 
 .header h1 {
@@ -110,10 +107,30 @@ body {
     color: var(--primary);
 }
 
-.input-container {
+.input-wrapper {
     display: flex;
     margin-bottom: 20px;
     animation: slideInUp 0.5s ease-in-out;
+}
+
+.input-container {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    background-color: var(--surface);
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    border: 1px solid transparent;
+    transition: border-color var(--transition-speed);
+}
+
+.input-container:focus-within {
+    border-color: var(--accent);
+}
+
+.url-icon {
+    width: 24px;
+    height: 24px;
+    margin: 0 10px;
 }
 
 @keyframes slideInUp {
@@ -129,18 +146,16 @@ body {
 
 #urlInput {
     flex-grow: 1;
-    padding: 12px 15px;
+    padding: 12px 0;
     font-size: 1em;
-    background-color: var(--surface);
-    border: 1px solid transparent;
-    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    background-color: transparent;
+    border: none;
     color: var(--primary);
     outline: none;
-    transition: border-color var(--transition-speed);
 }
 
-#urlInput:focus {
-    border-color: var(--accent);
+#urlInput::placeholder {
+    color: var(--secondary);
 }
 
 #shortenBtn {
@@ -148,7 +163,7 @@ body {
     font-size: 1em;
     font-weight: 500;
     background-color: var(--accent);
-    color: var(--primary);
+    color: #fff;
     border: none;
     border-radius: 0 var(--border-radius) var(--border-radius) 0;
     cursor: pointer;
@@ -243,6 +258,7 @@ body {
     border-bottom: 1px solid var(--surface);
     padding-bottom: 10px;
 }
+
 #url-table-container {
     overflow-x: auto;
 }
@@ -265,14 +281,9 @@ body {
 }
 
 #url-table th {
-    text-align: center;
+    background-color: var(--surface);
+    font-weight: 600;
 }
-
-#url-table th:first-child {
-    text-align: left;
-}
-
-
 
 #url-table td a {
     color: var(--accent);
@@ -284,10 +295,18 @@ body {
 }
 
 .site-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 250px;
+}
+
+.site-info img {
+    width: 20px;
+    height: 20px;
 }
 
 .actions {
@@ -375,11 +394,11 @@ body {
         font-size: 1.8em;
     }
 
-    .input-container {
+    .input-wrapper {
         flex-direction: column;
     }
 
-    #urlInput {
+    .input-container {
         border-radius: var(--border-radius) var(--border-radius) 0 0;
     }
 

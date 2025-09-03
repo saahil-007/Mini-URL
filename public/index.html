@@ -20,8 +20,11 @@
         </div>
     </div>
     <div class="container">
-        <div class="input-container">
-            <input type="text" id="urlInput" placeholder="Enter a long URL to make it tiny">
+        <div class="input-wrapper">
+            <div class="input-container">
+                <img src="https://img.icons8.com/fluency/48/link.png" alt="URL Icon" class="url-icon">
+                <input type="text" id="urlInput" placeholder="Enter a long URL to make it tiny">
+            </div>
             <button id="shortenBtn">Shorten</button>
         </div>
         <div class="loader" style="display: none;"></div>
@@ -50,7 +53,7 @@
             <p>&copy; 2025 Mini URL. All Rights Reserved.</p>
         </footer>
     </div>
-    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-    <script src="script.js"></script>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js" defer></script>
+    <script src="script.js" defer></script>
 </body>
 </html>
