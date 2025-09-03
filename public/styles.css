@@ -300,9 +300,6 @@ body {
     background-color: var(--surface);
     padding: 5px;
     border-radius: 5px;
-    visibility: visible;
-    opacity: 1;
-    transition: opacity 0.2s linear;
 }
 
 .actions button {

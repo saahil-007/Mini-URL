@@ -99,12 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             shortUrlLink.textContent = shortUrl;
             resultDiv.style.display = 'flex';
 
-            qrCodeDiv.innerHTML = '';
-            new QRCode(qrCodeDiv, {
-                text: shortUrl,
-                width: 128,
-                height: 128,
-            });
+            qrcode.makeCode(shortUrl);
             qrCodeDiv.style.display = 'block';
 
             urlInput.value = '';
