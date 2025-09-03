@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            const shortUrl = `${apiBaseUrl}/${data.shortUrl}`;
+            const shortUrl = data.shortUrl;
 
             shortUrlLink.href = shortUrl;
             shortUrlLink.textContent = shortUrl;

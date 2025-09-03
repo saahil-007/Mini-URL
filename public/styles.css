@@ -300,14 +300,9 @@ body {
     background-color: var(--surface);
     padding: 5px;
     border-radius: 5px;
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0s, opacity 0.2s linear;
-}
-
-#url-table tbody tr:hover .action-buttons {
     visibility: visible;
     opacity: 1;
+    transition: opacity 0.2s linear;
 }
 
 .actions button {

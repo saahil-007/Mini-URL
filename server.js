@@ -43,7 +43,16 @@ pool.connect(async (err, client, done) => {
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "img-src": ["'self'", "data:", "*"],
+      },
+    },
+  })
+);
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
