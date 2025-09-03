@@ -41,7 +41,7 @@ app.use('/shorten', limiter);
 
 const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 7);
 
-app.post('/shorten', async (req, res) => {
+app.post('/shorten', async (req, res, next) => {
   const { long_url } = req.body;
   const shortCode =  nanoid();
 
@@ -177,7 +177,8 @@ app.get('/site-info', async (req, res, next) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send(err.stack);
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.status(500).send(isProduction ? 'Server error' : err.stack);
 });
 
 app.listen(port, () => {
