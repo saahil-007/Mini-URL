@@ -1,6 +1,6 @@
 require('dotenv').config({ path: '.env.local' });
 require('dotenv').config();
-// Forcing a change to be detected by git
+
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -11,14 +11,7 @@ const path = require('path');
 const app = express();
 const port = 3000;
 
-// Pool for local database (for CLI)
-const localPool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
+
 
 // Pool for Neon database (for UI)
 const neonPool = new Pool({
@@ -36,22 +29,7 @@ CREATE TABLE IF NOT EXISTS urls (
 );
 `;
 
-// Initialize local DB
-localPool.connect(async (err, client, done) => {
-  if (err) {
-    console.error('Local database connection error', err.stack);
-    return;
-  }
-  console.log('Connected to local database');
-  try {
-    await client.query(createTableQuery);
-    console.log('Table "urls" is ready in local database.');
-  } catch (e) {
-    console.error('Could not create table in local database', e.stack);
-  } finally {
-    done();
-  }
-});
+
 
 // Initialize Neon DB
 neonPool.connect(async (err, client, done) => {
@@ -109,20 +87,7 @@ app.post('/api/shorten', async (req, res, next) => {
   }
 });
 
-app.post('/shorten', async (req, res, next) => {
-  const { long_url } = req.body;
-  const shortCode =  nanoid();
 
-  try {
-    const result = await localPool.query(
-      'INSERT INTO urls (long_url, short_code) VALUES ($1, $2) RETURNING *',
-      [long_url, shortCode]
-    );
-    res.json({ short_code: result.rows[0].short_code });
-  } catch (err) {
-    next(err);
-  }
-});
 
 app.get('/recent', async (req, res, next) => {
     const page = parseInt(req.query.page, 10) || 1;
@@ -172,7 +137,7 @@ app.get('/:shortCode', async (req, res, next) => {
   const { shortCode } = req.params;
 
   try {
-    const result = await localPool.query('SELECT long_url FROM urls WHERE short_code = $1', [
+    const result = await neonPool.query('SELECT long_url FROM urls WHERE short_code = $1', [
       shortCode,
     ]);
 

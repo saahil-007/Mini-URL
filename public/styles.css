@@ -360,3 +360,65 @@ body {
     font-size: 0.9em;
     border-top: 1px solid var(--surface);
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        margin: 20px auto;
+    }
+
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .input-container {
+        flex-direction: column;
+    }
+
+    #urlInput {
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+
+    #shortenBtn {
+        border-radius: 0 0 var(--border-radius) var(--border-radius);
+    }
+
+    .result {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #copyBtn {
+        margin-top: 10px;
+    }
+
+    #url-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .logo {
+        margin-bottom: 10px;
+    }
+
+    .toggle-container {
+        top: 10px;
+        right: 10px;
+    }
+
+    .header h1 {
+        font-size: 1.5em;
+    }
+
+    #recent-urls h2 {
+        font-size: 1.2em;
+    }
+}
