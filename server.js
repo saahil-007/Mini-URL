@@ -1,0 +1,184 @@
+require('dotenv').config();
+const express = require('express');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { customAlphabet } = require('nanoid');
+const { Pool } = require('pg');
+const path = require('path');
+
+const app = express();
+const port = 3000;
+
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+});
+
+pool.connect((err) => {
+  if (err) {
+    console.error('Database connection error', err.stack);
+  } else {
+    console.log('Connected to database');
+  }
+});
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+app.use('/shorten', limiter);
+
+const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 7);
+
+app.post('/shorten', async (req, res) => {
+  const { long_url } = req.body;
+  const shortCode =  nanoid();
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO urls (long_url, short_code) VALUES ($1, $2) RETURNING *',
+      [long_url, shortCode]
+    );
+    const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+    res.json({ shortUrl: `${baseUrl}/${result.rows[0].short_code}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+app.get('/recent', async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const offset = (page - 1) * limit;
+
+    try {
+        const result = await pool.query('SELECT * FROM urls ORDER BY id DESC LIMIT $1 OFFSET $2', [limit, offset]);
+        const totalResult = await pool.query('SELECT COUNT(*) FROM urls');
+        const total = parseInt(totalResult.rows[0].count, 10);
+        res.json({
+            rows: result.rows,
+            total,
+            page,
+            limit
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+app.delete('/urls/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM urls WHERE id = $1', [id]);
+        res.status(204).send();
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+app.put('/urls/:id', async (req, res) => {
+    const { id } = req.params;
+    const { long_url } = req.body;
+    try {
+        const result = await pool.query(
+            'UPDATE urls SET long_url = $1 WHERE id = $2 RETURNING *',
+            [long_url, id]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+app.get('/:shortCode', async (req, res) => {
+  const { shortCode } = req.params;
+
+  try {
+    const result = await pool.query('SELECT long_url FROM urls WHERE short_code = $1', [
+      shortCode,
+    ]);
+
+    if (result.rows.length > 0) {
+      res.redirect(result.rows[0].long_url);
+    } else {
+      res.status(404).send('URL not found');
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+const axios = require('axios');
+const cheerio = require('cheerio');
+
+app.get('/site-info', async (req, res) => {
+    const { url } = req.query;
+    if (!url) {
+        return res.status(400).json({ error: 'URL is required' });
+    }
+
+    let title = 'N/A';
+    let favicon = '';
+
+    try {
+        const { data } = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
+            timeout: 5000
+        });
+        const $ = cheerio.load(data);
+
+        title = $('title').text() || $('meta[property="og:title"]').attr('content') || new URL(url).hostname;
+
+        let faviconHref = $('link[rel="shortcut icon"]').attr('href') ||
+                          $('link[rel="icon"]').attr('href') ||
+                          $('link[rel="apple-touch-icon"]').attr('href');
+
+        if (faviconHref) {
+            favicon = new URL(faviconHref, url).href;
+        } else {
+            favicon = new URL('/favicon.ico', url).href;
+        }
+
+    } catch (error) {
+        console.error(`Error fetching site info for ${url}:`, error.message);
+        try {
+            const urlObject = new URL(url);
+            title = urlObject.hostname;
+            favicon = new URL('/favicon.ico', url).href;
+        } catch (e) {
+            // url is likely invalid
+            return res.json({ title: 'Invalid URL', favicon: '' });
+        }
+    }
+
+    // Check if favicon exists
+    try {
+        await axios.head(favicon, { timeout: 2000 });
+    } catch (e) {
+        // Favicon not found or timed out, use a default
+        favicon = ''; // Or a default icon URL
+    }
+
+    res.json({ title, favicon });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});

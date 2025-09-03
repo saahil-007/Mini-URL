@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini URL - A Simple and Fast URL Shortener</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="https://img.icons8.com/fluency/48/link.png" type="image/x-icon">
+</head>
+<body>
+    <div class="header">
+        <img src="https://img.icons8.com/fluency/48/link.png" alt="Logo" class="logo">
+        <h1>Mini URL</h1>
+        <div class="toggle-container">
+            <button id="theme-toggle" class="theme-toggle-button">
+                <svg class="theme-icon" id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.106a.75.75 0 011.06-1.06l1.591 1.59a.75.75 0 11-1.06 1.06l-1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.894 18.894a.75.75 0 011.06 1.06l-1.59 1.591a.75.75 0 11-1.06-1.06l1.59-1.591zM12 18a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM6.106 17.894a.75.75 0 011.06-1.06l1.591 1.59a.75.75 0 11-1.06 1.06l-1.591-1.59zM3 12a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H3.75A.75.75 0 013 12zM4.106 6.106a.75.75 0 011.06 1.06l-1.59 1.591a.75.75 0 01-1.06-1.06l1.59-1.591z"/></svg>
+                <svg class="theme-icon" id="theme-icon-dark" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11.645 2.25a.75.75 0 01.75.75V5.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM10.5 12a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM18.364 5.636a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 01-1.06-1.06l1.06-1.06zM21 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5h2.25a.75.75 0 01.75.75zM17.293 17.293a.75.75 0 011.06 1.06l-1.06 1.06a.75.75 0 01-1.06-1.06l1.06-1.06zM12 21a.75.75 0 01.75-.75v-2.25a.75.75 0 01-1.5 0v2.25a.75.75 0 01.75.75zM5.636 18.364a.75.75 0 011.06-1.06l1.06 1.06a.75.75 0 01-1.06 1.06l-1.06-1.06zM4.5 12a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H5.25a.75.75 0 01-.75-.75zM6.707 6.707a.75.75 0 011.06-1.06l1.06 1.06a.75.75 0 01-1.06 1.06L6.707 6.707z"/></svg>
+            </button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="input-container">
+            <input type="text" id="urlInput" placeholder="Enter a long URL to make it tiny">
+            <button id="shortenBtn">Shorten</button>
+        </div>
+        <div class="loader" style="display: none;"></div>
+        <div class="error-container" style="display: none;"></div>
+        <div class="result" style="display: none;">
+            <a href="" id="shortUrl" target="_blank"></a>
+            <button id="copyBtn">Copy</button>
+        </div>
+        <div id="qrcode" style="display: none;"></div>
+        <div id="recent-urls">
+            <h2>History</h2>
+            <div id="url-table-container">
+                <table id="url-table">
+                    <thead>
+                        <tr>
+                            <th>Short URL</th>
+                            <th>Site Info</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <button id="loadMoreBtn" style="display: none;">Load More</button>
+        </div>
+        <footer class="footer">
+            <p>&copy; 2025 Mini URL. All Rights Reserved.</p>
+        </footer>
+    </div>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
