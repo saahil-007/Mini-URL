@@ -11,22 +11,33 @@ const app = express();
 const port = 3000;
 
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_DATABASE,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
   }
 });
 
-pool.connect((err) => {
+const createTableQuery = `
+CREATE TABLE IF NOT EXISTS urls (
+  id SERIAL PRIMARY KEY,
+  long_url TEXT NOT NULL,
+  short_code VARCHAR(255) NOT NULL UNIQUE
+);
+`;
+
+pool.connect(async (err, client, done) => {
   if (err) {
     console.error('Database connection error', err.stack);
-    // process.exit(1); // Optionally exit if DB connection fails
-  } else {
-    console.log('Connected to database');
+    return;
+  }
+  console.log('Connected to database');
+  try {
+    await client.query(createTableQuery);
+    console.log('Table "urls" is ready.');
+  } catch (e) {
+    console.error('Could not create table', e.stack);
+  } finally {
+    done();
   }
 });
 
