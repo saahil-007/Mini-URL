@@ -29,6 +29,10 @@
     --secondary: #a0a0a0;
 }
 
+[data-theme="dark"] .actions button img {
+    filter: invert(1);
+}
+
 .toggle-container {
     position: absolute;
     top: 20px;
@@ -245,8 +249,11 @@ body {
 
 #url-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     border: 1px solid var(--surface);
+    border-radius: var(--border-radius);
+    overflow: hidden;
 }
 
 #url-table th,
@@ -265,10 +272,7 @@ body {
     text-align: left;
 }
 
-#url-table th:not(:last-child),
-#url-table td:not(:last-child) {
-    border-right: 1px solid var(--surface);
-}
+
 
 #url-table td a {
     color: var(--accent);
