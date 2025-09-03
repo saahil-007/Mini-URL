@@ -21,6 +21,7 @@ const pool = new Pool({
 pool.connect((err) => {
   if (err) {
     console.error('Database connection error', err.stack);
+    // process.exit(1); // Optionally exit if DB connection fails
   } else {
     console.log('Connected to database');
   }
