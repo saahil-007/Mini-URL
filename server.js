@@ -52,8 +52,7 @@ app.post('/shorten', async (req, res) => {
     const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
     res.json({ shortUrl: `${baseUrl}/${result.rows[0].short_code}` });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    next(err);
   }
 });
 
@@ -73,8 +72,7 @@ app.get('/recent', async (req, res) => {
             limit
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
+        next(err);
     }
 });
 
@@ -84,8 +82,7 @@ app.delete('/urls/:id', async (req, res) => {
         await pool.query('DELETE FROM urls WHERE id = $1', [id]);
         res.status(204).send();
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
+        next(err);
     }
 });
 
@@ -99,12 +96,11 @@ app.put('/urls/:id', async (req, res) => {
         );
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server error');
+        next(err);
     }
 });
 
-app.get('/:shortCode', async (req, res) => {
+app.get('/:shortCode', async (req, res, next) => {
   const { shortCode } = req.params;
 
   try {
@@ -118,65 +114,70 @@ app.get('/:shortCode', async (req, res) => {
       res.status(404).send('URL not found');
     }
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    next(err);
   }
 });
 
-const axios = require('axios');
-const cheerio = require('cheerio');
-
-app.get('/site-info', async (req, res) => {
+app.get('/site-info', async (req, res, next) => {
+    const axios = require('axios');
+    const cheerio = require('cheerio');
     const { url } = req.query;
+
     if (!url) {
         return res.status(400).json({ error: 'URL is required' });
     }
 
-    let title = 'N/A';
-    let favicon = '';
-
     try {
-        const { data } = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            },
-            timeout: 5000
-        });
-        const $ = cheerio.load(data);
+        let title = 'N/A';
+        let favicon = '';
 
-        title = $('title').text() || $('meta[property="og:title"]').attr('content') || new URL(url).hostname;
-
-        let faviconHref = $('link[rel="shortcut icon"]').attr('href') ||
-                          $('link[rel="icon"]').attr('href') ||
-                          $('link[rel="apple-touch-icon"]').attr('href');
-
-        if (faviconHref) {
-            favicon = new URL(faviconHref, url).href;
-        } else {
-            favicon = new URL('/favicon.ico', url).href;
-        }
-
-    } catch (error) {
-        console.error(`Error fetching site info for ${url}:`, error.message);
         try {
-            const urlObject = new URL(url);
-            title = urlObject.hostname;
-            favicon = new URL('/favicon.ico', url).href;
-        } catch (e) {
-            // url is likely invalid
-            return res.json({ title: 'Invalid URL', favicon: '' });
+            const { data } = await axios.get(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                },
+                timeout: 5000
+            });
+            const $ = cheerio.load(data);
+
+            title = $('title').text() || $('meta[property="og:title"]').attr('content') || new URL(url).hostname;
+
+            let faviconHref = $('link[rel="shortcut icon"]').attr('href') ||
+                              $('link[rel="icon"]').attr('href') ||
+                              $('link[rel="apple-touch-icon"]').attr('href');
+
+            if (faviconHref) {
+                favicon = new URL(faviconHref, url).href;
+            } else {
+                favicon = new URL('/favicon.ico', url).href;
+            }
+        } catch (error) {
+            console.error(`Error fetching site info for ${url}:`, error.message);
+            try {
+                const urlObject = new URL(url);
+                title = urlObject.hostname;
+                favicon = new URL('/favicon.ico', url).href;
+            } catch (e) {
+                return res.json({ title: 'Invalid URL', favicon: '' });
+            }
         }
-    }
 
-    // Check if favicon exists
-    try {
-        await axios.head(favicon, { timeout: 2000 });
-    } catch (e) {
-        // Favicon not found or timed out, use a default
-        favicon = ''; // Or a default icon URL
-    }
+        try {
+            await axios.head(favicon, { timeout: 2000 });
+        } catch (e) {
+            favicon = '';
+        }
 
-    res.json({ title, favicon });
+        res.json({ title, favicon });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.status(500).send(isProduction ? 'Server error' : err.stack);
 });
 
 app.listen(port, () => {
