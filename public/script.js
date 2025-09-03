@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         qrCodeDiv.style.display = 'none';
 
         try {
-            const response = await fetch(`${apiBaseUrl}/shorten`, {
+            const response = await fetch(`${apiBaseUrl}/api/shorten`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

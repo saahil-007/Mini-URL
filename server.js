@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '.env.local' });
 require('dotenv').config();
 // Forcing a change to be detected by git
 const express = require('express');
@@ -10,12 +11,21 @@ const path = require('path');
 const app = express();
 const port = 3000;
 
-const pool = new Pool({
+// Pool for local database (for CLI)
+const localPool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_DATABASE,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+});
+
+// Pool for Neon database (for UI)
+const neonPool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 const createTableQuery = `
@@ -26,17 +36,35 @@ CREATE TABLE IF NOT EXISTS urls (
 );
 `;
 
-pool.connect(async (err, client, done) => {
+// Initialize local DB
+localPool.connect(async (err, client, done) => {
   if (err) {
-    console.error('Database connection error', err.stack);
+    console.error('Local database connection error', err.stack);
     return;
   }
-  console.log('Connected to database');
+  console.log('Connected to local database');
   try {
     await client.query(createTableQuery);
-    console.log('Table "urls" is ready.');
+    console.log('Table "urls" is ready in local database.');
   } catch (e) {
-    console.error('Could not create table', e.stack);
+    console.error('Could not create table in local database', e.stack);
+  } finally {
+    done();
+  }
+});
+
+// Initialize Neon DB
+neonPool.connect(async (err, client, done) => {
+  if (err) {
+    console.error('Neon database connection error', err.stack);
+    return;
+  }
+  console.log('Connected to Neon database');
+  try {
+    await client.query(createTableQuery);
+    console.log('Table "urls" is ready in Neon database.');
+  } catch (e) {
+    console.error('Could not create table in Neon database', e.stack);
   } finally {
     done();
   }
@@ -66,12 +94,27 @@ app.use('/shorten', limiter);
 
 const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyz', 7);
 
+app.post('/api/shorten', async (req, res, next) => {
+  const { long_url } = req.body;
+  const shortCode =  nanoid();
+
+  try {
+    const result = await neonPool.query(
+      'INSERT INTO urls (long_url, short_code) VALUES ($1, $2) RETURNING *',
+      [long_url, shortCode]
+    );
+    res.json({ short_code: result.rows[0].short_code });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post('/shorten', async (req, res, next) => {
   const { long_url } = req.body;
   const shortCode =  nanoid();
 
   try {
-    const result = await pool.query(
+    const result = await localPool.query(
       'INSERT INTO urls (long_url, short_code) VALUES ($1, $2) RETURNING *',
       [long_url, shortCode]
     );
@@ -87,8 +130,8 @@ app.get('/recent', async (req, res, next) => {
     const offset = (page - 1) * limit;
 
     try {
-        const result = await pool.query('SELECT * FROM urls ORDER BY id DESC LIMIT $1 OFFSET $2', [limit, offset]);
-        const totalResult = await pool.query('SELECT COUNT(*) FROM urls');
+        const result = await neonPool.query('SELECT * FROM urls ORDER BY id DESC LIMIT $1 OFFSET $2', [limit, offset]);
+        const totalResult = await neonPool.query('SELECT COUNT(*) FROM urls');
         const total = parseInt(totalResult.rows[0].count, 10);
         res.json({
             rows: result.rows,
@@ -104,7 +147,7 @@ app.get('/recent', async (req, res, next) => {
 app.delete('/urls/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
-        await pool.query('DELETE FROM urls WHERE id = $1', [id]);
+        await neonPool.query('DELETE FROM urls WHERE id = $1', [id]);
         res.status(204).send();
     } catch (err) {
         next(err);
@@ -115,7 +158,7 @@ app.put('/urls/:id', async (req, res, next) => {
     const { id } = req.params;
     const { long_url } = req.body;
     try {
-        const result = await pool.query(
+        const result = await neonPool.query(
             'UPDATE urls SET long_url = $1 WHERE id = $2 RETURNING *',
             [long_url, id]
         );
@@ -129,7 +172,7 @@ app.get('/:shortCode', async (req, res, next) => {
   const { shortCode } = req.params;
 
   try {
-    const result = await pool.query('SELECT long_url FROM urls WHERE short_code = $1', [
+    const result = await localPool.query('SELECT long_url FROM urls WHERE short_code = $1', [
       shortCode,
     ]);
 
