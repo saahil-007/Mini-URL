@@ -133,24 +133,6 @@ app.put('/urls/:id', async (req, res, next) => {
     }
 });
 
-app.get('/:shortCode', async (req, res, next) => {
-  const { shortCode } = req.params;
-
-  try {
-    const result = await neonPool.query('SELECT long_url FROM urls WHERE short_code = $1', [
-      shortCode,
-    ]);
-
-    if (result.rows.length > 0) {
-      res.redirect(result.rows[0].long_url);
-    } else {
-      res.status(404).send('URL not found');
-    }
-  } catch (err) {
-    next(err);
-  }
-});
-
 app.get('/site-info', async (req, res, next) => {
     const axios = require('axios');
     const cheerio = require('cheerio');
@@ -205,6 +187,24 @@ app.get('/site-info', async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+});
+
+app.get('/:shortCode', async (req, res, next) => {
+  const { shortCode } = req.params;
+
+  try {
+    const result = await neonPool.query('SELECT long_url FROM urls WHERE short_code = $1', [
+      shortCode,
+    ]);
+
+    if (result.rows.length > 0) {
+      res.redirect(result.rows[0].long_url);
+    } else {
+      res.status(404).send('URL not found');
+    }
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.use((err, req, res, next) => {
