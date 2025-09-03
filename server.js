@@ -58,7 +58,7 @@ app.post('/shorten', async (req, res, next) => {
   }
 });
 
-app.get('/recent', async (req, res) => {
+app.get('/recent', async (req, res, next) => {
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
     const offset = (page - 1) * limit;
@@ -78,7 +78,7 @@ app.get('/recent', async (req, res) => {
     }
 });
 
-app.delete('/urls/:id', async (req, res) => {
+app.delete('/urls/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
         await pool.query('DELETE FROM urls WHERE id = $1', [id]);
@@ -88,7 +88,7 @@ app.delete('/urls/:id', async (req, res) => {
     }
 });
 
-app.put('/urls/:id', async (req, res) => {
+app.put('/urls/:id', async (req, res, next) => {
     const { id } = req.params;
     const { long_url } = req.body;
     try {
